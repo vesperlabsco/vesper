@@ -2,7 +2,7 @@
 	log_back log_front log_db log_adminer log_smtp4dev \
 	sh_back sh_front sh_db \
 	back_lint back_format back_typecheck back_test \
-	front_lint front_lint_fix front_format front_test front_build \
+	front_lint front_lint_fix front_format front_test front_build front_e2e front_e2e_ui \
 	migrate migration
 
 .DEFAULT_GOAL := status
@@ -32,6 +32,7 @@ else
 endif
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -e HOME=/home/$(APP_USER) back uv sync
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -e HOME=/home/$(APP_USER) front npm install
+	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -e HOME=/home/$(APP_USER) -w /data/front front npx playwright install chromium
 	$(DOCKER_COMPOSE_CMD) restart back front
 
 up:
@@ -128,3 +129,9 @@ front_test:
 
 front_build:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run build
+
+front_e2e:
+	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run e2e
+
+front_e2e_ui:
+	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run e2e:ui

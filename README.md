@@ -26,6 +26,8 @@ Pour regarder Playwright tourner en mode headed (display Xvfb du container front
 
 url : http://localhost:6080/vnc_auto.html
 
+⚠️ Ne pas s'arrêter à `http://localhost:6080` seul : ça ouvre la page d'accueil noVNC (bouton "Connect" à cliquer manuellement). Il faut le chemin complet `/vnc_auto.html` pour se connecter automatiquement au display.
+
 ## BACK APP:
 url : http://localhost:9000
 
