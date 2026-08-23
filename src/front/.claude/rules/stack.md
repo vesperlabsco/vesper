@@ -13,10 +13,10 @@
 
 L'app a trois espaces distincts, chacun avec son propre guard de rôle/scope au niveau du layout de route :
 
-| Espace | Route racine | Rôle requis | Scope |
-|---|---|---|---|
-| Organisation | `routes/org-admin/` | `org_admin` | organisation courante |
-| Clinique | `routes/clinic-admin/$clinicId/` | `clinic_admin` | `clinicId` de l'URL |
-| Utilisateur final | `routes/app/` | utilisateur authentifié | — |
+| Espace            | Route racine                     | Rôle requis             | Scope                 |
+| ----------------- | -------------------------------- | ----------------------- | --------------------- |
+| Organisation      | `routes/org-admin/`              | `org_admin`             | organisation courante |
+| Clinique          | `routes/clinic-admin/$clinicId/` | `clinic_admin`          | `clinicId` de l'URL   |
+| Utilisateur final | `routes/app/`                    | utilisateur authentifié | —                     |
 
 Le guard (vérification rôle + scope) vit dans le `beforeLoad` du `route.tsx` de chaque espace, jamais dispersé dans les pages enfants. Ne jamais dupliquer la logique de guard entre `org-admin` et `clinic-admin` : factoriser dans `shared/permissions/`.

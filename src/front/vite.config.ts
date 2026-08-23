@@ -1,14 +1,11 @@
-import { defineConfig, type UserConfig } from 'vite'
-import { coverageConfigDefaults } from 'vitest/config'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import babel from '@rolldown/plugin-babel'
+import { defineConfig, type UserConfig } from 'vite';
+import { coverageConfigDefaults } from 'vitest/config';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
+import babel from '@rolldown/plugin-babel';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    babel({ presets: [reactCompilerPreset()] })
-  ],
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   // `vitest/config`'s defineConfig would type-check this key natively, but it
   // bundles its own (older, non-rolldown) vite copy whose Plugin types clash
   // with this project's rolldown-vite — so `test` is typed via a plain cast
@@ -36,4 +33,4 @@ export default defineConfig({
       ],
     },
   },
-} as UserConfig)
+} as UserConfig);

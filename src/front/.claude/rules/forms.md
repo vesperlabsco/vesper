@@ -12,11 +12,11 @@
 
 ## Convention de nommage des schémas
 
-| Rôle | Convention | Exemple |
-|---|---|---|
-| Schéma d'entité complet (tel que renvoyé par l'API) | `<entity>Schema` | `userSchema`, `clinicSchema` |
-| Schéma de saisie formulaire (création) | `create<Entity>Schema` | `createUserSchema` |
-| Schéma de saisie formulaire (édition) | `update<Entity>Schema` | `updateUserSchema` |
+| Rôle                                                | Convention             | Exemple                      |
+| --------------------------------------------------- | ---------------------- | ---------------------------- |
+| Schéma d'entité complet (tel que renvoyé par l'API) | `<entity>Schema`       | `userSchema`, `clinicSchema` |
+| Schéma de saisie formulaire (création)              | `create<Entity>Schema` | `createUserSchema`           |
+| Schéma de saisie formulaire (édition)               | `update<Entity>Schema` | `updateUserSchema`           |
 
 Les schémas de saisie se **dérivent** du schéma d'entité via `.pick()` / `.omit()` / `.partial()` / `.extend()` — on ne réécrit jamais à la main un schéma qui duplique des champs déjà définis dans `<entity>Schema`.
 

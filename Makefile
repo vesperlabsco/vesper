@@ -2,7 +2,7 @@
 	log_back log_front log_db log_adminer log_smtp4dev \
 	sh_back sh_front sh_db \
 	back_lint back_format back_typecheck back_test \
-	front_lint front_test front_build \
+	front_lint front_lint_fix front_format front_test front_build \
 	migrate migration
 
 .DEFAULT_GOAL := status
@@ -116,6 +116,12 @@ migration:
 
 front_lint:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run lint
+
+front_lint_fix:
+	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run lint:fix
+
+front_format:
+	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run format
 
 front_test:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run test
