@@ -7,7 +7,11 @@ description: Conventions de nommage pytest (fake_/mock_/_mock/stub_/_fixture), i
 
 ## Emplacement
 
-`tests/` reproduit exactement l'arborescence de `src/app/` (voir `architecture.md`). Un module `src/app/domains/users/services.py` a son test dans `tests/app/domains/users/test_services.py`.
+`__tests__/` reproduit exactement l'arborescence de `app/` (`pyproject.toml` → `[tool.pytest.ini_options].testpaths = ["__tests__"]`). Un module `app/domains/users/services.py` a son test dans `__tests__/app/domains/users/test_services.py`.
+
+> Le schéma d'arborescence de `architecture.md` n'a pas encore été repassé en revue après le passage de `src/app/` à `app/` — se fier à `pyproject.toml` et à l'arborescence réelle de `app/`/`__tests__/`, pas au diagramme.
+
+Lancer la suite via `make back_test` (voir `docker-workflow.md`), jamais `pytest` directement sur l'host.
 
 ## Nommage — distinguer données de test et objets mockés
 

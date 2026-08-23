@@ -1,0 +1,30 @@
+Generic single-database configuration.
+### Running Migrations
+
+Run the following command (from the directory where `alembic.ini` is located, with your desired description in quotes):
+
+```bash
+uv run alembic revision --autogenerate -m "create user table"
+```
+
+This command will generate a file in `/app/migrations/versions/` with a name like `c3d895c9c9b8_create_user_table.py`.
+
+Then, to create/update the tables:
+
+```bash
+uv run alembic upgrade head
+```
+
+### Other Commands
+
+- Remove the last migration:
+
+```bash
+uv run alembic downgrade -1
+```
+
+- View migration history:
+
+```bash
+uv run alembic history
+```

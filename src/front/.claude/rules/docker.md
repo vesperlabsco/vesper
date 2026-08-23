@@ -1,19 +1,27 @@
 # Environnement Docker
 
-> ⚠️ Provisoire — l'environnement Docker/Makefile n'existe pas encore. Ce fichier pose l'intention ; il faudra le repasser en revue (noms de service exacts, noms de cibles Make, nom du binaire node/npm dans le conteneur) une fois `docker/` et le `Makefile` réellement écrits.
-
 ## Emplacement
 
 - `docker/` (docker-compose et fichiers associés) se trouve à la racine du repo, en `../../docker` depuis `src/front` — c'est-à-dire au même niveau que `src/`.
-- Un `Makefile` à la racine du repo (`../../`) sert de point d'entrée unique pour piloter Docker (up/down/build/logs/shell) et pour lancer les commandes npm du front dans le conteneur.
+- Le **Makefile à la racine du repo** (`../../Makefile`) est le point d'entrée unique pour piloter Docker (up/down/build/logs/shell) et pour lancer les commandes npm du front dans le conteneur — ne jamais taper `docker compose exec ...` à la main.
+- Service docker-compose du front : `front` (image `node:24-bookworm`, voir `docker/docker-compose.yml` et `docker/front/Dockerfile`).
 
 ## Règle
 
-- Le front tourne dans un conteneur : node_modules et le toolchain (lint, tests, build, dev server) vivent côté conteneur, pas côté host.
+- Le front tourne dans un conteneur : le toolchain (lint, tests, build, dev server) vit côté conteneur, pas côté host. `node_modules`, lui, est un bind mount classique partagé avec le host (choix assumé — utile pour l'autocomplétion IDE), pas un volume nommé isolé.
 - Toute commande npm (`dev`, `lint`, `test`, `build`, ...) s'exécute **dans le conteneur**, jamais directement sur le host.
-- Préférer une cible `make` (ex. `make lint`, `make test`) à un `docker compose exec <service> npm run ...` tapé à la main — le Makefile est la source de vérité des commandes, ça évite que chaque appel invente son propre nom de service/conteneur.
+- Préférer une cible `make` (`make front_lint`, `make front_test`, `make front_build`) à un `docker compose exec front npm run ...` tapé à la main — le Makefile est la source de vérité des commandes.
+- Shell dans le container : `make sh_front` (ajouter `SUDO=yes` pour un shell root). Logs : `make log_front`.
 - Si une cible Make nécessaire n'existe pas encore, le signaler plutôt que de contourner avec une commande docker ad hoc.
 
-## À faire une fois l'environnement en place
+## Cibles Make disponibles aujourd'hui
 
-- Renseigner ici le nom du service docker-compose pour le front, et la liste des cibles Make disponibles (lint, test unitaire, test e2e, build, dev).
+| Cible | Commande réelle (`package.json`) | Statut |
+|---|---|---|
+| `make front_lint` | `npm run lint` → `eslint .` | fonctionnelle |
+| `make front_test` | `npm run test` | le script `test` n'existe pas encore dans `package.json` — aucune stack de test (unitaire ou e2e) n'est installée. Voir `quality-checks.md`. |
+| `make front_build` | `npm run build` → `tsc -b && vite build` | fonctionnelle |
+
+Pas de cible `make front_dev` : le serveur de dev Vite démarre automatiquement au boot du container (`npm run dev -- --host 0.0.0.0 --port 5173`, piloté par supervisord — voir `docker/front/supervisor/ihm.conf`), accessible sur http://localhost:3000 (port hôte défini par `FRONT_PORT` dans `docker/.env`). `make up`/`make start` suffisent à le lancer.
+
+Playwright en mode headed (une fois installé) sera visible via noVNC sur http://localhost:6080/vnc_auto.html — le display Xvfb + x11vnc + noVNC est déjà en place dans le container (`docker/front/Dockerfile`, `docker/front/supervisor/`), en attendant l'ajout de Playwright à `package.json`.

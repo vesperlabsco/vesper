@@ -1,0 +1,88 @@
+services:
+  back:
+    build:
+      context: ./back
+      args:
+        APP_USER: ${APP_USER}
+        APP_USER_GROUP: ${APP_USER_GROUP}
+        APP_USER_UID: ${APP_USER_UID}
+    working_dir: /data/back
+    command: uv run task run_app
+    ports:
+      - "${BACK_PORT}:9000"
+    volumes:
+      - ../src/back:/data/back
+    depends_on:
+      - postgres_db
+    networks:
+      - vesper
+
+  front:
+    build:
+      context: ./front
+      args:
+        APP_USER: ${APP_USER}
+        APP_USER_GROUP: ${APP_USER_GROUP}
+        APP_USER_UID: ${APP_USER_UID}
+    working_dir: /data/front
+    environment:
+      VITE_API_URL: http://localhost:${BACK_PORT}
+    ports:
+      - "${FRONT_PORT}:5173"
+      - "${FRONT_VNC_PORT}:6080"
+    volumes:
+      - ../src/front:/data/front
+    depends_on:
+      - back
+    networks:
+      - vesper
+
+  postgres_db:
+    image: postgres:18.1
+    hostname: postgres_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - vesper
+
+  adminer:
+    image: adminer:5.4.2-standalone
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres_db
+    ports:
+      - "${ADMINER_PORT}:8080"
+    depends_on:
+      - postgres_db
+    networks:
+      - vesper
+
+  smtp4dev:
+    image: rnwood/smtp4dev:v3
+    restart: on-failure
+    ports:
+      - "${SMTP4DEV_WEB_PORT}:80"
+      - "${SMTP4DEV_SMTP_PORT}:25"
+      - "${SMTP4DEV_IMAP_PORT}:143"
+    volumes:
+      - smtp4dev_data:/smtp4dev
+    networks:
+      - vesper
+
+networks:
+  vesper:
+
+volumes:
+  postgres_data:
+  smtp4dev_data:
+
+
+# Ports below come from docker/.env — update there, not here, if they change.
+# URL FRONT: http://localhost:3000      (Vite dev server, port 5173 in-container)
+# URL FRONT VNC: http://localhost:6080/vnc_auto.html  (noVNC, display Xvfb du front)
+# URL BACK: http://localhost:9000       (8000 is already taken by another local process on this machine)
+# URL ADMINER: http://localhost:8080
+# URL SMTP4DEV: http://localhost:5000

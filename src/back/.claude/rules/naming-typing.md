@@ -34,7 +34,7 @@ Ces exceptions sont mappées vers des réponses HTTP dans `app/exceptions/handle
 
 - Tout le code est typé : paramètres, valeurs de retour, attributs de classe.
 - `Any` est **interdit**, sauf justification explicite écrite en commentaire à côté de son usage (ex. interop avec une librairie non typée).
-- Un vérificateur de types strict (mypy strict, ou pyright en mode strict — à trancher techniquement) tourne en complément de Ruff, en local (task `uv`) et en CI.
+- **Pyright** (mode strict) tourne en complément de Ruff, en local (`make back_typecheck`) et en CI — voir `linting-formatting.md`.
 
 ## Pas d'abréviations ni de diminutifs
 
