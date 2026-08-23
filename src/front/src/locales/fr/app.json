@@ -1,0 +1,7 @@
+{
+  "star-wars-people-list": {
+    "title": "Personnages Star Wars",
+    "loading": "Chargement des personnages…",
+    "error": "Échec du chargement des personnages."
+  }
+}

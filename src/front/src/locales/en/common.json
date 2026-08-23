@@ -1,20 +1,33 @@
 {
-  "Hero": {
-    "getStarted": "Get started",
+  "root-layout": {
+    "nav-home": "Home",
+    "nav-star-wars": "Star Wars",
+    "login": "Simulate login",
+    "logout": "Log out"
+  },
+  "hero": {
+    "get-started": "Get started",
     "counter": "Count is {{count}}"
   },
-  "DocsSection": {
+  "docs-section": {
     "title": "Documentation",
     "subtitle": "Your questions, answered",
-    "exploreVite": "Explore Vite",
-    "learnMore": "Learn more"
+    "explore-vite": "Explore Vite",
+    "learn-more": "Learn more"
   },
-  "SocialSection": {
+  "social-section": {
     "title": "Connect with us",
     "subtitle": "Join the Vite community",
     "github": "GitHub",
     "discord": "Discord",
     "x": "X.com",
     "bluesky": "Bluesky"
+  },
+  "api": {
+    "common": {
+      "error": {
+        "too-many-requests": "Too many requests — please try again later."
+      }
+    }
   }
 }

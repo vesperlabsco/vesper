@@ -6,7 +6,9 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import commonEn from './en/common.json';
+import appEn from './en/app.json';
 import commonFr from './fr/common.json';
+import appFr from './fr/app.json';
 
 // Ressources bundlées de façon synchrone (pas de http-backend) : la promesse
 // resolue par `.init()` n'a rien à attendre, on l'ignore explicitement.
@@ -16,13 +18,13 @@ void i18n
   .use(initReactI18next)
   .init({
     resources: {
-      en: { common: commonEn },
-      fr: { common: commonFr },
+      en: { common: commonEn, app: appEn },
+      fr: { common: commonFr, app: appFr },
     },
     fallbackLng: 'en',
     supportedLngs: ['en', 'fr'],
     load: 'languageOnly',
-    ns: ['common'],
+    ns: ['common', 'app'],
     defaultNS: 'common',
     detection: {
       // Pas de segment d'URL (/en, /fr) : préférence sauvegardée en premier,

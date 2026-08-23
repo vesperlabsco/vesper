@@ -16,13 +16,12 @@ Un composant exporte un seul composant principal du même nom que le fichier. Pa
 
 ## Emplacement des tests unitaires
 
-Les tests unitaires ne sont pas colocalisés à plat à côté du fichier testé : ils vivent dans un dossier `__test__/` au même niveau que ce qu'ils testent.
+Les tests unitaires sont colocalisés à plat, directement à côté du fichier testé — pas de dossier `__test__/`.
 
 ```
 features/users/components/
 ├── UserList.tsx
-└── __test__/
-    └── UserList.test.tsx
+└── UserList.test.tsx
 ```
 
 Cette règle s'applique partout où il y a des tests unitaires (`features/**`, `shared/**`, etc.).

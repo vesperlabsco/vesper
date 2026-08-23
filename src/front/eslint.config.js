@@ -12,7 +12,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'playwright-report', 'test-results']),
+  globalIgnores(['dist', 'coverage', 'playwright-report', 'test-results', '**/routeTree.gen.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -42,6 +42,21 @@ export default defineConfig([
           project: ['./tsconfig.app.json', './tsconfig.node.json'],
         },
       },
+    },
+  },
+  {
+    // Convention TanStack Router (file-based routing) : chaque fichier de
+    // route exporte à la fois `Route` et son composant — c'est le pattern
+    // documenté et attendu par la lib, pas une vraie violation de Fast
+    // Refresh (voir la doc TanStack Router elle-même sur cet override).
+    files: ['src/routes/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      // `redirect()` de TanStack Router (utilisé dans les guards `beforeLoad`)
+      // renvoie un objet Redirect fait pour être `throw`, pas une instance
+      // d'Error — pattern documenté par la lib, pas une vraie erreur non
+      // typée.
+      '@typescript-eslint/only-throw-error': 'off',
     },
   },
   ...jsonc.configs['recommended-with-json'],

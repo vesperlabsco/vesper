@@ -4,6 +4,7 @@ import inspect
 from fastapi import Request, status
 from pyrate_limiter import Duration, Limiter, Rate
 
+from app.core.messages import ErrorKey
 from app.exceptions.base import AppHTTPException
 
 # Limit applied per client (IP): 100 requests / minute
@@ -25,5 +26,5 @@ async def rate_limit(request: Request) -> None:
         raise AppHTTPException(
             message="Too many requests",
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            key="error.too_many_requests",
+            key=ErrorKey.TOO_MANY_REQUESTS,
         )

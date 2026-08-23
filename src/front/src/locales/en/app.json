@@ -1,0 +1,7 @@
+{
+  "star-wars-people-list": {
+    "title": "Star Wars characters",
+    "loading": "Loading characters…",
+    "error": "Failed to load characters."
+  }
+}

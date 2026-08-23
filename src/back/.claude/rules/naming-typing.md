@@ -7,8 +7,8 @@ description: Conventions get_/find_, exceptions métier, typage strict, interdic
 
 ## Fonctions `get...` vs `find...`
 
-- **`get...`** : la fonction **doit impérativement** retourner une valeur. Si aucun résultat n'est trouvé, elle **lève** une exception métier dédiée — jamais `None`, jamais une valeur par défaut silencieuse.
-  Exemple : `getUserById(user_id: int) -> User` — si l'utilisateur n'existe pas, `raise UserNotFoundException(user_id)`.
+- **`get...`** : la fonction **doit impérativement** retourner une valeur. Si aucun résultat n'est trouvé, elle **lève** `AppHTTPException` (voir *Exceptions métier* ci-dessous) — jamais `None`, jamais une valeur par défaut silencieuse.
+  Exemple : `getUserById(user_id: int) -> User` — si l'utilisateur n'existe pas, `raise AppHTTPException(message=f"User {user_id} not found", status_code=404, key=UserErrorKey.NOT_FOUND)`.
 - **`find...`** : la fonction **peut** retourner `None` (ou une liste vide) si rien n'est trouvé. C'est le cas d'usage normal, pas une erreur.
   Exemple : `findAnimal(animal_id: int) -> Animal | None`.
 
@@ -16,19 +16,40 @@ description: Conventions get_/find_, exceptions métier, typage strict, interdic
 
 ## Exceptions métier
 
-Chaque domaine définit ses propres exceptions dans `domains/<domaine>/exceptions.py`, héritant toutes d'une base commune `AppException` (`app/exceptions/base.py`) qui hérite elle-même d'`Exception`.
+**Pas de classe dédiée par cas d'erreur.** `app/exceptions/base.py` expose une paire générique — `AppException` et sa sous-classe `AppHTTPException` — pas une hiérarchie à faire grossir (une `UserNotFoundException`, une `AnimalNotFoundException`, etc.) au fil des domaines. Choix assumé : avec autant de domaines et de fonctions `get_`/`find_` que le projet va accumuler, une classe par erreur métier finirait par proliférer pour un bénéfice faible — le `status_code` et la `key` suffisent à distinguer les cas côté client.
 
 ```python
 class AppException(Exception):
-    pass
+    def __init__(self, message=None, key=None, status_code=400): ...
 
-class UserNotFoundException(AppException):
-    def __init__(self, user_id: int) -> None:
-        super().__init__(f"User {user_id} not found")
-        self.user_id = user_id
+class AppHTTPException(AppException):
+    def __init__(self, message, status_code=400, key=None): ...
 ```
 
-Ces exceptions sont mappées vers des réponses HTTP dans `app/exceptions/handlers.py` — jamais levées comme `HTTPException` directement depuis un `service` ou un `repository`.
+Une erreur métier (ex. un `get_` qui ne trouve rien) se lève en instanciant `AppHTTPException` directement au point d'échec, avec un `status_code` HTTP et une `key` de traduction spécifiques au cas :
+
+```python
+raise AppHTTPException(
+    message=f"User {user_id} not found",
+    status_code=404,
+    key=UserErrorKey.NOT_FOUND,
+)
+```
+
+La `key` est ce qui identifie le cas d'erreur côté front (i18n, gestion fine par le client) — pas besoin d'une classe Python dédiée pour ça. `app/core/exception_handlers.py` mappe `AppException`/`AppHTTPException`/`HTTPException` vers le format JSON standard (`{success, message, key}`) — jamais de `HTTPException` levée directement depuis un `service` ou un `repository`.
+
+### Format d'une `key`
+
+`api.<scope>.<success|error>.<cas-en-kebab-case>` — ex. `api.auth.success.login`, `api.users.error.not-found`, `api.common.error.too-many-requests`. `<scope>` est le nom du domaine (`users`, `auth`, `animals`...) ou `common` pour une clé transverse non liée à un domaine précis (même logique que `common.json` côté front, voir `i18n.md` front). Le `<cas>`, dès qu'il a plus d'un mot, est en **kebab-case** (`too-many-requests`, pas `too_many_requests`) — cohérence avec le front.
+
+### Où vivent les `key` (succès et erreur)
+
+Les `key` ne sont **jamais des chaînes littérales tapées à la volée** au point de levée (`key="api.users.error.not-found"`) — elles sont des membres d'un `StrEnum`, pour avoir l'autocomplétion, éviter les typos silencieuses, et savoir où chercher/ajouter une clé :
+
+- **Transverses / infra** (`<scope>` = `common`, ou pas liées à un domaine — rate limiting, auth, validation générique) : `app/core/messages.py` (`ErrorKey`, et `SuccessKey` le jour où un premier cas de succès en a besoin). Ex. `ErrorKey.TOO_MANY_REQUESTS = "api.common.error.too-many-requests"`.
+- **Propres à un domaine** (`<scope>` = nom du domaine) : `domains/<domaine>/keys.py` (ex. `UserErrorKey.NOT_FOUND = "api.users.error.not-found"`), colocées avec le `service`/`repository` qui les lève — pas remontées dans `core/` seulement parce qu'elles sont utilisées côté front (toutes les `key` le sont).
+
+Ce découpage suit le même principe domain-first que le reste du projet (voir `architecture.md`) plutôt qu'un fichier unique qui grossirait indéfiniment et deviendrait un point de contention entre domaines.
 
 ## Typage
 

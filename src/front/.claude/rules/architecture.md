@@ -1,6 +1,6 @@
 # Architecture & arborescence
 
-Projet pas encore initialisé. Tant que `package.json` / `src/` n'existent pas, la priorité est de scaffolder Vite puis de mettre en place l'arborescence ci-dessous — ne pas dévier de la structure sans en discuter.
+L'arborescence ci-dessous est la cible — ne pas dévier de la structure sans en discuter. Elle se remplit progressivement au fur et à mesure des features réelles (pas de dossier vide créé par anticipation) ; `app/`, `routes/` (dont l'espace `app/` avec son guard), `locales/`, `shared/stores/`, et un premier exemple sous `features/` existent déjà (voir la feature `star-wars`, accessible sous `routes/app/star-wars.tsx`). `shared/ui/`, `shared/lib/`, `shared/permissions/`, `config/`, et les espaces `org-admin`/`clinic-admin`/`_public` restent à créer. `AuthProvider.tsx` n'existe pas encore : le guard de `routes/app/` s'appuie pour l'instant sur `shared/stores/useSessionStore.ts`, un mock en mémoire (pas de vraie auth backend) — à remplacer une fois le backend en place.
 
 ## Arborescence cible
 

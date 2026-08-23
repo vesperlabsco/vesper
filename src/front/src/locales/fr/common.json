@@ -1,20 +1,33 @@
 {
-  "Hero": {
-    "getStarted": "Commencer",
+  "root-layout": {
+    "nav-home": "Accueil",
+    "nav-star-wars": "Star Wars",
+    "login": "Simuler la connexion",
+    "logout": "Se déconnecter"
+  },
+  "hero": {
+    "get-started": "Commencer",
     "counter": "Le compteur est à {{count}}"
   },
-  "DocsSection": {
+  "docs-section": {
     "title": "Documentation",
     "subtitle": "Vos questions, nos réponses",
-    "exploreVite": "Découvrir Vite",
-    "learnMore": "En savoir plus"
+    "explore-vite": "Découvrir Vite",
+    "learn-more": "En savoir plus"
   },
-  "SocialSection": {
+  "social-section": {
     "title": "Rejoignez-nous",
     "subtitle": "Rejoignez la communauté Vite",
     "github": "GitHub",
     "discord": "Discord",
     "x": "X.com",
     "bluesky": "Bluesky"
+  },
+  "api": {
+    "common": {
+      "error": {
+        "too-many-requests": "Trop de requêtes — merci de réessayer plus tard."
+      }
+    }
   }
 }
