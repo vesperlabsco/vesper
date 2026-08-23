@@ -1,0 +1,20 @@
+{
+  "Hero": {
+    "getStarted": "Commencer",
+    "counter": "Le compteur est à {{count}}"
+  },
+  "DocsSection": {
+    "title": "Documentation",
+    "subtitle": "Vos questions, nos réponses",
+    "exploreVite": "Découvrir Vite",
+    "learnMore": "En savoir plus"
+  },
+  "SocialSection": {
+    "title": "Rejoignez-nous",
+    "subtitle": "Rejoignez la communauté Vite",
+    "github": "GitHub",
+    "discord": "Discord",
+    "x": "X.com",
+    "bluesky": "Bluesky"
+  }
+}

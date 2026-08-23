@@ -6,6 +6,11 @@ import babel from '@rolldown/plugin-babel';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
+  resolve: {
+    alias: {
+      '@': `${import.meta.dirname}/src`,
+    },
+  },
   // `vitest/config`'s defineConfig would type-check this key natively, but it
   // bundles its own (older, non-rolldown) vite copy whose Plugin types clash
   // with this project's rolldown-vite — so `test` is typed via a plain cast
@@ -30,6 +35,7 @@ export default defineConfig({
         'src/**/routes/**',
         'src/**/components/**',
         'src/**/ui/**',
+        'src/**/app/providers/**',
       ],
     },
   },

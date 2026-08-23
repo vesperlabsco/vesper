@@ -1,0 +1,20 @@
+{
+  "Hero": {
+    "getStarted": "Get started",
+    "counter": "Count is {{count}}"
+  },
+  "DocsSection": {
+    "title": "Documentation",
+    "subtitle": "Your questions, answered",
+    "exploreVite": "Explore Vite",
+    "learnMore": "Learn more"
+  },
+  "SocialSection": {
+    "title": "Connect with us",
+    "subtitle": "Join the Vite community",
+    "github": "GitHub",
+    "discord": "Discord",
+    "x": "X.com",
+    "bluesky": "Bluesky"
+  }
+}
