@@ -8,6 +8,8 @@ Petit CLI qui relie une tâche Notion, une branche git et une Pull Request GitHu
 - `jq` et `curl` (déjà présents sur cette machine)
 - Une intégration interne Notion (créée sur https://www.notion.so/my-integrations), **partagée sur la page "Tâches"**.
 
+➡️ Voir [SETUP.md](./SETUP.md) pour le guide pas-à-pas (installation de `gh`, authentification, création du token Notion).
+
 ## Installation
 
 ```bash
