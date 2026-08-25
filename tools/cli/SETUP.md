@@ -82,7 +82,7 @@ cp tools/cli/.env.dist tools/cli/.env
 ```bash
 NOTION_TOKEN=ntn_xxx        # récupéré à l'étape 3
 NOTION_DATABASE_ID=f92a...  # déjà pré-rempli, à ajuster si besoin (étape 4)
-BASE_BRANCH=main            # branche cible des PR
+BASE_BRANCH=develop         # branche cible des PR
 ```
 
 `tools/cli/.env` est gitignoré : il ne sera jamais commité.

@@ -25,7 +25,7 @@ load_env() {
 
   : "${NOTION_TOKEN:?NOTION_TOKEN manquant. Copie tools/cli/.env.dist vers tools/cli/.env et renseigne-le.}"
   : "${NOTION_DATABASE_ID:?NOTION_DATABASE_ID manquant. Copie tools/cli/.env.dist vers tools/cli/.env et renseigne-le.}"
-  BASE_BRANCH="${BASE_BRANCH:-main}"
+  BASE_BRANCH="${BASE_BRANCH:-develop}"
 }
 
 # Extrait le premier groupe de chiffres en tête de chaîne (ex: "5-test" -> "5").
@@ -37,4 +37,13 @@ leading_number() {
 
 current_branch() {
   git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD
+}
+
+# Coupe la commande si le working tree a des fichiers modifiés/non suivis à commit ou stash.
+require_clean_worktree() {
+  local action=$1
+  if [[ -n "$(git -C "${REPO_ROOT}" status --porcelain)" ]]; then
+    echo "⚠️  Working tree non propre (fichiers modifiés ou non suivis)." >&2
+    die "commit ou stash tes changements avant de ${action}."
+  fi
 }

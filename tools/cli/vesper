@@ -7,7 +7,7 @@
 #   vesper task pr [id] [--desc "description de l'action"]
 #
 # Config requise (voir tools/cli/.env.dist): NOTION_TOKEN, NOTION_DATABASE_ID,
-# BASE_BRANCH (optionnel, défaut "main"). Authentification GitHub via `gh auth login`.
+# BASE_BRANCH (optionnel, défaut "develop"). Authentification GitHub via `gh auth login`.
 
 set -euo pipefail
 
@@ -53,13 +53,13 @@ cmd_task_start() {
   local id=${1:-}
   [[ -n "$id" ]] || die "Usage: vesper task start <id>"
 
+  require_clean_worktree "démarrer une tâche"
+
   local task page_id name branch
   task=$(notion_find_task "$id")
   page_id=$(notion_task_page_id "$task")
   name=$(notion_task_name "$task")
   branch=$(notion_task_branch "$task")
-
-  [[ -z "$(git -C "${REPO_ROOT}" status --porcelain)" ]] || die "Working tree non propre, commit/stash avant de démarrer une tâche."
 
   echo "Tâche #${id} — ${name}"
   echo "Branche: ${branch}"
@@ -88,6 +88,8 @@ cmd_task_pr() {
   local branch
   branch=$(current_branch)
   [[ -n "$id" ]] || id=$(leading_number "$branch")
+
+  require_clean_worktree "créer la PR"
 
   local task page_id name type url
   task=$(notion_find_task "$id")
