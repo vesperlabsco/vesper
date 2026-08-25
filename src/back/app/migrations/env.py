@@ -1,16 +1,16 @@
 from logging.config import fileConfig
+
 from alembic import context
-from app.database import engine_sync
 
 # Import model to create
-from app.database import Base
+from app.database import Base, engine_sync
 
 # Importer TOUS les modèles pour qu'Alembic les détecte
 # Importer TOUS les modèles pour qu'Alembic les détecte
 # Importer TOUS les modèles pour qu'Alembic les détecte
 # Importer TOUS les modèles pour qu'Alembic les détecte
 # Import it from the ___init__.py from models or not depend about the architecture
-#EXAMPLE :
+# EXAMPLE :
 # from app.models.main.salepoint import Salepoint
 # from app.models.main.network_metric import NetworkMetric
 # from app.models.main.network_status import NetworkStatus

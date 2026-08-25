@@ -52,9 +52,14 @@ jobs:
       # by default — CI=true (set by the Actions runner on the host) needs to
       # be passed explicitly for playwright.config.ts's `process.env.CI` check
       # (single worker) to actually take effect.
+      #
+      # --user/HOME must match `make front_install`'s `npx playwright install
+      # chromium` call (Makefile), otherwise this runs as root (HOME=/root)
+      # while the browser was cached under /home/app_user/.cache/ms-playwright
+      # — Playwright then reports the executable missing.
       - name: E2E tests (playwright)
         working-directory: docker
-        run: docker compose -p vesper exec -e CI=true -w /data/front front npm run e2e
+        run: docker compose -p vesper exec -e CI=true --user $(id -u) -e HOME=/home/app_user -w /data/front front npm run e2e
 
       - name: Tear down (containers, volumes, local images)
         if: always()

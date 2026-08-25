@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
@@ -28,8 +29,8 @@ async def init_db():
     try:
         async with engine_async.begin():
             logger.info("CONNECTION TO DATABASE SUCCESSFULL")
-    except Exception:
-        logger.error("ERROR : CONNECTION TO DATABASE ERROR")
+    except SQLAlchemyError:
+        logger.exception("ERROR : CONNECTION TO DATABASE ERROR")
 
 
 def get_sync_session():

@@ -12,7 +12,12 @@ RUN groupadd --gid ${APP_USER_GROUP_ID} ${APP_USER_GROUP}; \
     echo "${APP_USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 USER ${APP_USER}
-WORKDIR /home/${APP_USER}
+# UID 0 is shared with root (see useradd --non-unique above) for CI builds
+# run as root; without an explicit HOME, getpwuid(0) resolves to root's
+# passwd entry instead of app_user's, sending the uv install to /root
+# instead of here.
+ENV HOME="/home/${APP_USER}"
+WORKDIR ${HOME}
 
 # Install UV
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
