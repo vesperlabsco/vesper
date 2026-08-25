@@ -6,6 +6,11 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Runner self-hosted à 4 Go de RAM : un seul Chromium à la fois pour éviter
+  // l'OOM (2 workers en parallèle doublent la mémoire Chromium). CI (GitHub
+  // Actions) définit `CI=true` automatiquement ; en local, on garde le défaut
+  // (parallèle sur tous les cœurs).
+  workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:5173',

@@ -1,0 +1,61 @@
+name: Front CI
+
+on:
+  push:
+    paths:
+      - "src/front/**"
+      - "docker/**"
+      - "Makefile"
+      - ".github/workflows/front-ci.yml"
+  pull_request:
+    paths:
+      - "src/front/**"
+      - "docker/**"
+      - "Makefile"
+      - ".github/workflows/front-ci.yml"
+  workflow_dispatch:
+
+# back-ci and front-ci share one self-hosted runner and the same docker-compose
+# project (`-p vesper`) — never let them touch containers/images concurrently.
+concurrency:
+  group: vesper-self-hosted-docker
+  cancel-in-progress: false
+
+jobs:
+  front:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure env files (no secrets — dev defaults)
+        run: cp docker/.env.dist docker/.env
+
+      - name: Build app
+        run: make front_install
+
+      # No separate typecheck script — `npm run build` runs `tsc -b && vite build`,
+      # typecheck is part of build (see src/front/package.json).
+      - name: Build (incl. typecheck)
+        working-directory: docker
+        run: docker compose -p vesper exec -w /data/front front npm run build
+
+      - name: Lint (eslint)
+        working-directory: docker
+        run: docker compose -p vesper exec -w /data/front front npm run lint
+
+      - name: Unit tests (vitest)
+        working-directory: docker
+        run: docker compose -p vesper exec -w /data/front front npm run test
+
+      # `docker compose exec` doesn't forward host env vars into the container
+      # by default — CI=true (set by the Actions runner on the host) needs to
+      # be passed explicitly for playwright.config.ts's `process.env.CI` check
+      # (single worker) to actually take effect.
+      - name: E2E tests (playwright)
+        working-directory: docker
+        run: docker compose -p vesper exec -e CI=true -w /data/front front npm run e2e
+
+      - name: Tear down (containers, volumes, local images)
+        if: always()
+        run: make front_teardown

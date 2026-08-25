@@ -1,8 +1,8 @@
 .PHONY: install up down start stop status restart uninstall \
 	log_back log_front log_db log_adminer log_smtp4dev \
 	sh_back sh_front sh_db \
-	back_lint back_format back_typecheck back_test \
-	front_lint front_lint_fix front_format front_test front_build front_e2e front_e2e_ui \
+	back_install back_lint back_format back_typecheck back_test back_teardown \
+	front_install front_lint front_lint_fix front_format front_test front_build front_e2e front_e2e_ui front_teardown \
 	migrate migration
 
 .DEFAULT_GOAL := status
@@ -94,6 +94,17 @@ sh_db:
 
 # --- Back (uv) ---
 
+# Build & start only the back service, then uv sync.
+# Scoped alternative to `install` for back-only contexts (e.g. CI) — doesn't
+# touch front/postgres_db. `--no-deps` overrides `depends_on: postgres_db`:
+# safe since app/database.py's init_db() catches the connection error instead
+# of crashing (see app/main.py lifespan), and the test suite is unit-only, no
+# real DB integration. Revisit once integration tests need a live database.
+back_install:
+	$(DOCKER_COMPOSE_CMD) build --build-arg APP_USER_UID=$(CURRENT_UID) --build-arg APP_USER=$(APP_USER) --build-arg APP_USER_GROUP=$(APP_USER_GROUP) back
+	$(DOCKER_COMPOSE_CMD) up -d --no-deps back
+	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -e HOME=/home/$(APP_USER) back uv sync
+
 back_lint:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/back back uv run task lint
 
@@ -106,6 +117,15 @@ back_typecheck:
 back_test:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/back back uv run task test
 
+# Full cleanup for disk-constrained self-hosted runners, scoped to exactly
+# what back_install started (back only) — never touches front's or
+# postgres_db's container, image or volume. `down` has no per-service form,
+# hence the explicit stop/rm/rmi instead.
+back_teardown:
+	$(DOCKER_COMPOSE_CMD) stop back
+	$(DOCKER_COMPOSE_CMD) rm -f back
+	docker rmi vesper-back || true
+
 migrate:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/back back uv run alembic upgrade head
 
@@ -114,6 +134,18 @@ migration:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/back back uv run alembic revision --autogenerate -m "$(NAME)"
 
 # --- Front (npm) ---
+
+# Build & start only the front service, then npm install + playwright chromium.
+# Scoped alternative to `install` for front-only contexts (e.g. CI) — doesn't
+# touch back/postgres_db. `--no-deps` overrides the `depends_on: back` in
+# docker-compose.yml: safe today since front doesn't call the API yet (no
+# AuthProvider/backend calls wired up, see front CLAUDE.md) — revisit once it does.
+front_install:
+	$(DOCKER_COMPOSE_CMD) build --build-arg APP_USER_UID=$(CURRENT_UID) --build-arg APP_USER=$(APP_USER) --build-arg APP_USER_GROUP=$(APP_USER_GROUP) front
+	$(DOCKER_COMPOSE_CMD) up -d --no-deps front
+	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -e HOME=/home/$(APP_USER) -w /data/front front npm install
+	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -e HOME=/home/$(APP_USER) -w /data/front front npx playwright install chromium
+	$(DOCKER_COMPOSE_CMD) restart front
 
 front_lint:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run lint
@@ -135,3 +167,11 @@ front_e2e:
 
 front_e2e_ui:
 	$(DOCKER_COMPOSE_CMD) exec --user $(CURRENT_UID) -w /data/front front npm run e2e:ui
+
+# Full cleanup for disk-constrained self-hosted runners, scoped to exactly
+# what front_install started (front only) — never touches back's or
+# postgres_db's container, image or volume. See back_teardown.
+front_teardown:
+	$(DOCKER_COMPOSE_CMD) stop front
+	$(DOCKER_COMPOSE_CMD) rm -f front
+	docker rmi vesper-front || true

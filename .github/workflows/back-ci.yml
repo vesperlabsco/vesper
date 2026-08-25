@@ -1,0 +1,53 @@
+name: Back CI
+
+on:
+  push:
+    paths:
+      - "src/back/**"
+      - "docker/**"
+      - "Makefile"
+      - ".github/workflows/back-ci.yml"
+  pull_request:
+    paths:
+      - "src/back/**"
+      - "docker/**"
+      - "Makefile"
+      - ".github/workflows/back-ci.yml"
+  workflow_dispatch:
+
+# back-ci and front-ci share one self-hosted runner and the same docker-compose
+# project (`-p vesper`) — never let them touch containers/images concurrently.
+concurrency:
+  group: vesper-self-hosted-docker
+  cancel-in-progress: false
+
+jobs:
+  back:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure env files (no secrets — dev defaults)
+        run: |
+          cp docker/.env.dist docker/.env
+          cp src/back/.env.dist src/back/.env
+
+      - name: Build app
+        run: make back_install
+
+      - name: Typecheck (pyright)
+        working-directory: docker
+        run: docker compose -p vesper exec -w /data/back back uv run task typecheck
+
+      - name: Lint (ruff)
+        working-directory: docker
+        run: docker compose -p vesper exec -w /data/back back uv run task lint
+
+      - name: Unit tests (pytest)
+        working-directory: docker
+        run: docker compose -p vesper exec -w /data/back back uv run task test
+
+      - name: Tear down (containers, volumes, local image)
+        if: always()
+        run: make back_teardown
