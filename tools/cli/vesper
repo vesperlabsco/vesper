@@ -105,7 +105,6 @@ cmd_task_pr() {
 
   local body_file
   body_file=$(mktemp)
-  trap 'rm -f "$body_file"' RETURN
 
   {
     echo "## Description"
@@ -120,7 +119,8 @@ cmd_task_pr() {
 
   local pr_output pr_url
   pr_output=$(gh pr create --base "${BASE_BRANCH}" --head "${branch}" --title "${title}" --body-file "$body_file" 2>&1) \
-    || die "Échec de création de la PR: ${pr_output}"
+    || { rm -f "$body_file"; die "Échec de création de la PR: ${pr_output}"; }
+  rm -f "$body_file"
   pr_url=$(grep -Eo 'https://github.com/[^ ]+' <<<"$pr_output" | tail -1)
   [[ -n "$pr_url" ]] || die "PR créée mais URL introuvable dans la sortie de gh: ${pr_output}"
 
