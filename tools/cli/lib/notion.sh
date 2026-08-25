@@ -39,6 +39,17 @@ notion_task_name() { jq -r '.properties["Nom"].title | map(.plain_text) | join("
 notion_task_type() { jq -r '.properties["Type"].select.name // ""' <<<"$1"; }
 notion_task_status() { jq -r '.properties["État"].status.name // ""' <<<"$1"; }
 
+# Convertit le Type Notion (Hotfix, Bugfix, Task, Story) en type utilisé dans le titre de PR.
+notion_pr_type() {
+  local type=$1
+  case "$type" in
+    Hotfix) echo "hotfix" ;;
+    Bugfix) echo "bugfix" ;;
+    Task|Story) echo "feature" ;;
+    *) die "Type Notion inconnu: '${type}' (attendu: Hotfix, Bugfix, Task, Story)." ;;
+  esac
+}
+
 # La propriété "Branche" est une formule qui vaut "git checkout -b <branche>".
 notion_task_branch() {
   local formula
@@ -51,6 +62,15 @@ notion_update_status() {
   local page_id=$1 status=$2
   local body
   body=$(jq -n --arg status "$status" '{properties: {"État": {status: {name: $status}}}}')
+  notion_api PATCH "/pages/${page_id}" "$body" >/dev/null
+}
+
+# Assigne la tâche à l'utilisateur NOTION_USER_ID (voir tools/cli/.env.dist).
+notion_assign_self() {
+  local page_id=$1
+  [[ -n "${NOTION_USER_ID:-}" ]] || { echo "⚠️  NOTION_USER_ID non défini dans .env, tâche non assignée." >&2; return 0; }
+  local body
+  body=$(jq -n --arg user "$NOTION_USER_ID" '{properties: {"Assignee": {people: [{id: $user}]}}}')
   notion_api PATCH "/pages/${page_id}" "$body" >/dev/null
 }
 

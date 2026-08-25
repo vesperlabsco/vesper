@@ -42,6 +42,7 @@ tools/cli/vesper task start 5
 - Crée la branche depuis `origin/$BASE_BRANCH` en reprenant le nom généré par la propriété Notion `Branche` (ex: `5-test`).
 - Pousse la branche sur GitHub.
 - Passe le statut Notion de la tâche à **En cours**.
+- Assigne la tâche à `NOTION_USER_ID` (propriété `Assignee`) — voir [SETUP.md](./SETUP.md#7-récupérer-ton-notion_user_id).
 
 ### Ouvrir la PR de fin de tâche
 
@@ -54,7 +55,7 @@ tools/cli/vesper task pr 5 --desc "ajout du endpoint /health"
 ```
 
 - Pousse la branche courante.
-- Crée la PR sur GitHub avec pour titre `VSP-<id> - <Nom de la tâche> (<Type>): <description>` et un corps généré (lien Notion + liste des commits).
+- Crée la PR sur GitHub avec pour titre `VSP-<id> - <Nom de la tâche> (<type PR>): <description>` et un corps généré (lien Notion + liste des commits). `<type PR>` est dérivé du `Type` Notion de la tâche : `Hotfix` → `hotfix`, `Bugfix` → `bugfix`, `Task`/`Story` → `feature`.
 - Passe le statut Notion de la tâche à **Pull Request**.
 - Ajoute un commentaire sur la tâche Notion avec le lien de la PR.
 
@@ -66,6 +67,7 @@ Base "Tâches" (colonnes utilisées par le CLI) :
 |-----------|-----------|------------------------------------------------------------------------|
 | ID        | unique_id | identifiant numérique de la tâche                                     |
 | Nom       | title     | titre de la tâche                                                      |
-| Type      | select    | `Orga`, `Dev`                                                          |
+| Type      | select    | `Hotfix`, `Bugfix`, `Task`, `Story` — mappé vers le type de PR (voir `task pr` ci-dessus) |
 | État      | status    | `Todo`, `En cours`, `Pull Request`, `Merged`, `Terminé`, `Archivé`     |
 | Branche   | formula   | `git checkout -b <id>-<slug-du-nom>` — le CLI en extrait le nom de branche |
+| Assignee  | people    | assigné automatiquement à `NOTION_USER_ID` par `task start`           |

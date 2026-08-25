@@ -8,7 +8,7 @@ ARG APP_USER_UID=1000
 # Create dev user matching the host UID so files written from the container
 # (uv.lock, .venv, __pycache__...) stay owned by the host user.
 RUN groupadd --gid ${APP_USER_GROUP_ID} ${APP_USER_GROUP}; \
-    useradd --uid ${APP_USER_UID} --shell=/bin/bash -p ! -g ${APP_USER_GROUP} --create-home ${APP_USER} && \
+    useradd --non-unique --uid ${APP_USER_UID} --shell=/bin/bash -p ! -g ${APP_USER_GROUP} --create-home ${APP_USER} && \
     echo "${APP_USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 USER ${APP_USER}

@@ -36,7 +36,7 @@ RUN apt-get update -qy && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --gid ${APP_USER_GROUP_ID} ${APP_USER_GROUP}; \
-    useradd --uid ${APP_USER_UID} --shell=/bin/bash -p ! -g ${APP_USER_GROUP} --create-home ${APP_USER} && \
+    useradd --non-unique --uid ${APP_USER_UID} --shell=/bin/bash -p ! -g ${APP_USER_GROUP} --create-home ${APP_USER} && \
     echo "${APP_USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Dépendances système de Chromium (fonts, libnss, libx11...), fournies par

@@ -28,11 +28,17 @@ load_env() {
   BASE_BRANCH="${BASE_BRANCH:-develop}"
 }
 
-# Extrait le premier groupe de chiffres en tête de chaîne (ex: "5-test" -> "5").
-leading_number() {
+# Extrait l'ID de tâche d'un nom de branche (ex: "feature/VSP-5-test" -> "5",
+# ou ancien format "5-test" -> "5").
+extract_task_id() {
   local input=$1
-  [[ "$input" =~ ^([0-9]+) ]] || die "Impossible d'extraire un ID de tâche depuis '${input}'."
-  echo "${BASH_REMATCH[1]}"
+  if [[ "$input" =~ VSP-([0-9]+) ]]; then
+    echo "${BASH_REMATCH[1]}"
+  elif [[ "$input" =~ ^([0-9]+) ]]; then
+    echo "${BASH_REMATCH[1]}"
+  else
+    die "Impossible d'extraire un ID de tâche depuis '${input}'."
+  fi
 }
 
 current_branch() {

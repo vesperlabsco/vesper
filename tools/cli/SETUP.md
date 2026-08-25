@@ -82,6 +82,7 @@ cp tools/cli/.env.dist tools/cli/.env
 ```bash
 NOTION_TOKEN=ntn_xxx        # récupéré à l'étape 3
 NOTION_DATABASE_ID=f92a...  # déjà pré-rempli, à ajuster si besoin (étape 4)
+NOTION_USER_ID=             # ton ID Notion, à remplir à l'étape 7 (sinon `task start` n'assigne personne)
 BASE_BRANCH=develop         # branche cible des PR
 ```
 
@@ -93,7 +94,23 @@ BASE_BRANCH=develop         # branche cible des PR
 tools/cli/vesper task list
 ```
 
-Si la liste des tâches Notion s'affiche, tout est configuré. Voir `README.md` pour l'usage complet (`task start`, `task pr`).
+Si la liste des tâches Notion s'affiche, tout est configuré.
+
+## 7. Récupérer ton `NOTION_USER_ID`
+
+`task start` assigne automatiquement la tâche à `NOTION_USER_ID` (propriété `Assignee`). Pour récupérer cet ID, le plus simple est de s'assigner manuellement une tâche existante dans Notion, puis de lire son ID via l'API :
+
+```bash
+curl -s -X POST "https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query" \
+  -H "Authorization: Bearer ${NOTION_TOKEN}" \
+  -H "Notion-Version: 2022-06-28" \
+  -H "Content-Type: application/json" \
+  -d '{"page_size": 5}' | jq '.results[].properties.Assignee.people'
+```
+
+Copier le champ `id` de la personne concernée dans `NOTION_USER_ID`. (Les tokens d'intégration interne ne peuvent pas lister les utilisateurs du workspace via `/v1/users`, d'où ce détour.)
+
+Voir `README.md` pour l'usage complet (`task start`, `task pr`).
 
 ## Problèmes fréquents
 
@@ -103,3 +120,4 @@ Si la liste des tâches Notion s'affiche, tout est configuré. Voir `README.md` 
 | Notion API renvoie une erreur 404 / "object_not_found" | L'intégration n'est pas partagée sur la page — refaire l'étape 3.4 |
 | `gh: command not found` | `gh` non installé — étape 1 |
 | `gh pr create` échoue avec une erreur d'auth | `gh auth status` doit être vert — refaire l'étape 2 |
+| `⚠️ NOTION_USER_ID non défini` lors de `task start` | `NOTION_USER_ID` manquant ou vide dans `.env` — refaire l'étape 7 |

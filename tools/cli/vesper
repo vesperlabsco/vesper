@@ -69,7 +69,8 @@ cmd_task_start() {
   git -C "${REPO_ROOT}" push -u origin "${branch}"
 
   notion_update_status "$page_id" "En cours"
-  echo "✅ Branche créée et poussée, statut Notion -> En cours."
+  notion_assign_self "$page_id"
+  echo "✅ Branche créée et poussée, statut Notion -> En cours, tâche assignée."
 }
 
 cmd_task_pr() {
@@ -87,15 +88,16 @@ cmd_task_pr() {
 
   local branch
   branch=$(current_branch)
-  [[ -n "$id" ]] || id=$(leading_number "$branch")
+  [[ -n "$id" ]] || id=$(extract_task_id "$branch")
 
   require_clean_worktree "créer la PR"
 
-  local task page_id name type url
+  local task page_id name type pr_type url
   task=$(notion_find_task "$id")
   page_id=$(notion_task_page_id "$task")
   name=$(notion_task_name "$task")
   type=$(notion_task_type "$task")
+  pr_type=$(notion_pr_type "$type")
   url=$(notion_task_url "$task")
 
   [[ -n "$desc" ]] || desc="$name"
@@ -103,7 +105,7 @@ cmd_task_pr() {
   git -C "${REPO_ROOT}" push -u origin "${branch}"
 
   local title
-  title="VSP-${id} - ${name} (${type}): ${desc}"
+  title="VSP-${id} - ${name} (${pr_type}): ${desc}"
 
   local body_file
   body_file=$(mktemp)
