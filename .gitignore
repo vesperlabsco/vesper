@@ -25,3 +25,6 @@ docker/.env
 
 #front
 src/front/.env
+
+#cli
+tools/cli/.env

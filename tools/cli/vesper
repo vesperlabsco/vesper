@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# CLI de workflow tâche <-> branche <-> PR pour le projet Vesper.
+#
+# Usage:
+#   vesper task list [--status <État>]
+#   vesper task start <id>
+#   vesper task pr [id] [--desc "description de l'action"]
+#
+# Config requise (voir tools/cli/.env.dist): NOTION_TOKEN, NOTION_DATABASE_ID,
+# BASE_BRANCH (optionnel, défaut "main"). Authentification GitHub via `gh auth login`.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "${SCRIPT_DIR}/lib/common.sh"
+# shellcheck source=lib/notion.sh
+source "${SCRIPT_DIR}/lib/notion.sh"
+
+usage() {
+  sed -n '2,10p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+cmd_task_list() {
+  local status_filter=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --status) status_filter="$2"; shift 2 ;;
+      *) die "Option inconnue: $1" ;;
+    esac
+  done
+
+  local body response
+  if [[ -n "$status_filter" ]]; then
+    body=$(jq -n --arg s "$status_filter" '{filter: {property: "État", status: {equals: $s}}, sorts: [{property: "ID", direction: "ascending"}]}')
+  else
+    body=$(jq -n '{sorts: [{property: "ID", direction: "ascending"}]}')
+  fi
+  response=$(notion_api POST "/databases/${NOTION_DATABASE_ID}/query" "$body")
+
+  printf '%-8s %-10s %-8s %s\n' "ID" "État" "Type" "Nom"
+  jq -r '.results[] | [
+      (.properties["ID"].unique_id.number | tostring),
+      (.properties["État"].status.name // "-"),
+      (.properties["Type"].select.name // "-"),
+      (.properties["Nom"].title | map(.plain_text) | join(""))
+    ] | @tsv' <<<"$response" | while IFS=$'\t' read -r id etat type nom; do
+      printf '%-8s %-10s %-8s %s\n' "$id" "$etat" "$type" "$nom"
+    done
+}
+
+cmd_task_start() {
+  local id=${1:-}
+  [[ -n "$id" ]] || die "Usage: vesper task start <id>"
+
+  local task page_id name branch
+  task=$(notion_find_task "$id")
+  page_id=$(notion_task_page_id "$task")
+  name=$(notion_task_name "$task")
+  branch=$(notion_task_branch "$task")
+
+  [[ -z "$(git -C "${REPO_ROOT}" status --porcelain)" ]] || die "Working tree non propre, commit/stash avant de démarrer une tâche."
+
+  echo "Tâche #${id} — ${name}"
+  echo "Branche: ${branch}"
+
+  git -C "${REPO_ROOT}" fetch origin "${BASE_BRANCH}"
+  git -C "${REPO_ROOT}" checkout -b "${branch}" "origin/${BASE_BRANCH}"
+  git -C "${REPO_ROOT}" push -u origin "${branch}"
+
+  notion_update_status "$page_id" "En cours"
+  echo "✅ Branche créée et poussée, statut Notion -> En cours."
+}
+
+cmd_task_pr() {
+  local id="" desc=""
+  local positional=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --desc) desc="$2"; shift 2 ;;
+      *) positional+=("$1"); shift ;;
+    esac
+  done
+  if [[ ${#positional[@]} -gt 0 ]]; then
+    id="${positional[0]}"
+  fi
+
+  local branch
+  branch=$(current_branch)
+  [[ -n "$id" ]] || id=$(leading_number "$branch")
+
+  local task page_id name type url
+  task=$(notion_find_task "$id")
+  page_id=$(notion_task_page_id "$task")
+  name=$(notion_task_name "$task")
+  type=$(notion_task_type "$task")
+  url=$(notion_task_url "$task")
+
+  [[ -n "$desc" ]] || desc="$name"
+
+  git -C "${REPO_ROOT}" push -u origin "${branch}"
+
+  local title
+  title="VSP-${id} - ${name} (${type}): ${desc}"
+
+  local body_file
+  body_file=$(mktemp)
+  trap 'rm -f "$body_file"' RETURN
+
+  {
+    echo "## Description"
+    echo "${desc}"
+    echo
+    echo "## Tâche Notion"
+    echo "${url}"
+    echo
+    echo "## Commits"
+    git -C "${REPO_ROOT}" log "origin/${BASE_BRANCH}..${branch}" --pretty=format:'- %s'
+  } >"$body_file"
+
+  local pr_output pr_url
+  pr_output=$(gh pr create --base "${BASE_BRANCH}" --head "${branch}" --title "${title}" --body-file "$body_file" 2>&1) \
+    || die "Échec de création de la PR: ${pr_output}"
+  pr_url=$(grep -Eo 'https://github.com/[^ ]+' <<<"$pr_output" | tail -1)
+  [[ -n "$pr_url" ]] || die "PR créée mais URL introuvable dans la sortie de gh: ${pr_output}"
+
+  echo "✅ PR créée: ${pr_url}"
+
+  notion_update_status "$page_id" "Pull Request"
+  notion_add_comment "$page_id" "Pull Request: ${pr_url}" "$pr_url"
+  echo "✅ Statut Notion -> Pull Request, lien PR ajouté en commentaire."
+}
+
+main() {
+  require_bin curl
+  require_bin jq
+  require_bin git
+  require_bin gh
+
+  local group=${1:-}
+  local action=${2:-}
+  shift $(( $# >= 2 ? 2 : $# )) || true
+
+  case "${group}-${action}" in
+    task-list) load_env; cmd_task_list "$@" ;;
+    task-start) load_env; cmd_task_start "$@" ;;
+    task-pr) load_env; cmd_task_pr "$@" ;;
+    *) usage; exit 1 ;;
+  esac
+}
+
+main "$@"
